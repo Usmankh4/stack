@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-
+import Header from './components/header';
 // Import images from public directory
 const bannerImage = "/images/phone.png";
 const phoneImages = {
@@ -12,7 +12,7 @@ const phoneImages = {
 };
 
 export const metadata = {
-  title: 'Mobile Repair & Accessories - Your Trusted Tech Partner',
+  title: 'ZainWireless - Your Trusted Tech Partner',
   description: 'Professional phone repair services and premium mobile accessories. We specialize in iPhone, Samsung, and other device repairs.',
 };
 
@@ -30,6 +30,7 @@ export default function Home() {
 
   return (
     <div className="page-container">
+      
       <main className="main-content">
         <section className="hero-section">
           <div className="hero-content">
@@ -51,7 +52,7 @@ export default function Home() {
               alt="Phone Banner" 
               priority
               width={500}
-              height={300}
+              height={670}
               style={{ objectFit: 'contain' }}
             />
           </div>
