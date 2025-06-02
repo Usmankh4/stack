@@ -1,0 +1,38 @@
+# Create a Python-appropriate .gitignore file
+@"
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyd
+*.pyo
+*.so
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+pip-selfcheck.json
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.db
+*.sqlite3
+*.env
+.env
+.idea/
+.vscode/
+"@ > .gitignore
