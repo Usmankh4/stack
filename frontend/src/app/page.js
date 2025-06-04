@@ -165,7 +165,6 @@ export default function Home() {
           </div>
         </section>
         
-        {/* New Arrivals Section */}
         <section className="new-arrivals-section">
           <div className="section-header">
             <h2 className="section-title">Just Arrived</h2>
@@ -307,7 +306,6 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Testimonials Section */}
         <section className="testimonials-section">
           <h2 className="section-title">What Our Customers Say</h2>
           <div className="testimonials-slider">
@@ -326,7 +324,6 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Newsletter Section */}
         <section className="newsletter-section">
           <div className="newsletter-content">
             <h2 className="newsletter-title">Get 10% Off Your First Order</h2>
