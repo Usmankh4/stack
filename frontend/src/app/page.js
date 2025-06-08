@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from './components/header';
-// Import images from public directory
 const bannerImage = "/images/phone.png";
 const phoneImages = {
   apple: "/images/15promax.jpg",
@@ -16,7 +15,7 @@ export const metadata = {
   description: 'Professional phone repair services and premium mobile accessories. We specialize in iPhone, Samsung, and other device repairs.',
 };
 
-export default function Home() {
+export default async function Home() {
   const phoneCards = [
     { id: 'apple', name: 'Apple', link: '/phones/Apple', image: phoneImages.apple },
     { id: 'samsung', name: 'Samsung', link: '/phones/Samsung', image: phoneImages.samsung },
@@ -27,8 +26,29 @@ export default function Home() {
     { id: 'accessories', name: 'Accessories', link: '/products/Accessories', image: phoneImages.accessories },
     { id: 'tablets', name: 'Tablets', link: '/phones/Tablet', image: phoneImages.tablets },
   ];
-
-  // Mock data for promotional sections (will be replaced with backend data later)
+  const promotions = [
+    { 
+      id: 'promo1', 
+      title: 'Summer Sale', 
+      subtitle: 'Get up to 30% off on selected phones', 
+      link: '/promotions/summer-sale',
+      buttonText: 'Shop Now' 
+    },
+    { 
+      id: 'promo2', 
+      title: 'New Arrivals', 
+      subtitle: 'Check out the latest phone models', 
+      link: '/new-arrivals',
+      buttonText: 'Discover' 
+    },
+    { 
+      id: 'promo3', 
+      title: 'Accessories Deal', 
+      subtitle: 'Buy any case & get a screen protector 50% off', 
+      link: '/promotions/accessories-bundle',
+      buttonText: 'View Deal' 
+    }
+  ];
   const flashDeals = [
     { id: 1, name: 'iPhone 15 Pro', originalPrice: 999, salePrice: 899, image: phoneImages.apple, discount: '10%', timeLeft: '5h 23m' },
     { id: 2, name: 'Samsung S24 Ultra', originalPrice: 1199, salePrice: 999, image: phoneImages.samsung, discount: '17%', timeLeft: '5h 23m' },
@@ -46,7 +66,6 @@ export default function Home() {
     { id: 2, name: 'Samsung S23', price: 799, image: phoneImages.samsung, rating: 4.7, reviewCount: 189 },
     { id: 3, name: 'Phone Charging Stand', price: 29.99, image: phoneImages.accessories, rating: 4.9, reviewCount: 412 },
   ];
-
   const bundleDeals = [
     { 
       id: 1, 
@@ -72,11 +91,46 @@ export default function Home() {
     { id: 3, name: 'Michael T.', rating: 4, comment: 'Great selection of phones and very knowledgeable staff. Highly recommend.', date: '3 weeks ago' },
   ];
 
-  const promotions = [
-    { id: 1, title: 'SUMMER SALE', subtitle: 'Up to 30% off select accessories', buttonText: 'Shop Now', link: '/sale' },
-    { id: 2, title: 'FREE SCREEN PROTECTOR', subtitle: 'With any phone purchase', buttonText: 'View Phones', link: '/phones' },
-    { id: 3, title: 'TRADE-IN OFFER', subtitle: 'Get up to $500 for your old device', buttonText: 'Learn More', link: '/trade-in' },
-  ];
+  const productData = await fetchHomePageData();
+
+  const flashDeal = productData.flash_deals.map(product => {
+    return {
+      id: product.id,
+      name: product.name,
+      originalPrice: parseFloat(product.price),
+      salePrice: parseFloat(product.sale_price),
+      image: product.image_url,
+      discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
+      timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
+      slug: product.slug,
+      type: product.storage ? 'phone' : 'accessory'
+    };
+  }).slice(0, 3);
+      
+  const newArrival = productData.new_arrivals.map(product =>{
+    return {
+      
+    }
+  })
+
+  async function fetchHomePageData() {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/homepage/`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Failed to fetch homepage data');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching homepage data:', error);
+      return {
+        flash_deals: { phones: [], accessories: [] },
+        new_arrivals: { phones: [], accessories: [] },
+        best_sellers: { phones: [], accessories: [] }
+      };
+    }
+  }
+
+  
 
   return (
     <div className="page-container">
@@ -108,7 +162,6 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Featured Promotions Banner */}
         <section className="promotions-banner">
           <div className="promo-slider">
             {promotions.map((promo, index) => (
@@ -130,7 +183,6 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Flash Deals Section */}
         <section className="flash-deals-section">
           <div className="section-header">
             <h2 className="section-title">Flash Deals</h2>
@@ -140,7 +192,7 @@ export default function Home() {
             </div>
           </div>
           <div className="deals-slider">
-            {flashDeals.map((deal) => (
+            {flashDeal.map((deal) => (
               <Link key={deal.id} href={`/product/${deal.id}`} className="deal-card">
                 <div className="discount-badge">{deal.discount} OFF</div>
                 <div className="card-image">
@@ -339,4 +391,15 @@ export default function Home() {
       
     </div>
   );
+}
+
+function getTimeLeft(endTimeString) {
+  const endTime = new Date(endTimeString);
+  const now = new Date();
+  const timeLeft = endTime - now;
+ 
+  if (timeLeft <= 0) return '0h 0m';
+ 
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 }

@@ -3,9 +3,13 @@ import stripe
 from unicodedata import category
 import os
 from django.db import models
+from django.db.models.fields.files import ImageField
 from django.utils.text import slugify
 import uuid
+from django.conf import settings
 
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class Phones(models.Model):
     name=models.CharField(max_length=200)
@@ -38,7 +42,14 @@ class Phones(models.Model):
                 self.stripe_id = stripe_product.id
             except Exception as e:
                 print(f"Error creating Stripe product: {e}")
+        
         super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.brand} {self.name}"
+    
+    class Meta:
+        verbose_name_plural = "Phones"
 
 
 class PhoneVariant(models.Model):
@@ -50,9 +61,13 @@ class PhoneVariant(models.Model):
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(default=0)
     reservedStock = models.IntegerField(default=0)
-    image = models.ImageField(upload_to='phones/', null=True, blank=True)
+    image = ImageField(upload_to='phones/', null=True, blank=True)
     stripe_price_id = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_new_arrival = models.BooleanField(default=False)
+    is_best_seller = models.BooleanField(default=False)
+    is_flash_deal = models.BooleanField(default=False)
+    flash_deal_end = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
     
@@ -86,6 +101,13 @@ class PhoneVariant(models.Model):
             except Exception as e:
                 print(f"Error creating Stripe price: {e}")
 
+    def __str__(self):
+        return f"{self.phone.name} - {self.color} - {self.storage}"
+
+    class Meta:
+        verbose_name_plural = "Phone Variants"
+
+
 class Accessory(models.Model):
     name = models.CharField(max_length=200)
     slug = models.CharField(max_length=255, unique=True, blank = True)
@@ -93,10 +115,14 @@ class Accessory(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(default=0)
-    image = models.ImageField(upload_to='accessories/', null=True, blank=True)
+    image = ImageField(upload_to='accessories/', null=True, blank=True)
     stripe_id = models.CharField(max_length=100, null=True, blank=True)
     stripe_price_id = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_new_arrival = models.BooleanField(default=False)
+    is_best_seller = models.BooleanField(default=False)
+    is_flash_deal = models.BooleanField(default=False)
+    flash_deal_end = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -123,7 +149,7 @@ class Accessory(models.Model):
                 if not self.stripe_price_id:
                     price_in_cents = int(self.price*100)
                     stripe_price = stripe.Price.create(
-                        product = stripe_price.id,
+                        product = self.stripe_id,
                         unit_amount=price_in_cents,
                         currency='cad',
                          metadata={
@@ -135,10 +161,8 @@ class Accessory(models.Model):
                 print(f"Error creating Stripe product/price for accessory: {e}")
         super().save(*args, **kwargs)
 
-                    
+    def __str__(self):
+        return self.name
 
-
-
-
-        
-             
+    class Meta:
+        verbose_name_plural = "Accessories"
