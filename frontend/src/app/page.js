@@ -99,7 +99,7 @@ export default async function Home() {
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url,
+      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
@@ -109,9 +109,17 @@ export default async function Home() {
       
   const newArrival = productData.new_arrivals.map(product =>{
     return {
-      
+      id: product.id,
+      name: product.name,
+      originalPrice: parseFloat(product.price),
+      salePrice: parseFloat(product.sale_price),
+      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
+      timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
+      slug: product.slug,
+      type: product.storage ? 'phone' : 'accessory',  
     }
-  })
+  }).slice(0,3);
 
   async function fetchHomePageData() {
     try {
@@ -192,23 +200,23 @@ export default async function Home() {
             </div>
           </div>
           <div className="deals-slider">
-            {flashDeal.map((deal) => (
-              <Link key={deal.id} href={`/product/${deal.id}`} className="deal-card">
-                <div className="discount-badge">{deal.discount} OFF</div>
+            {flashDeal.map((product) => (
+              <Link key={product.id} href={`/product/${product.id}`} className="deal-card">
+                <div className="discount-badge">{product.discount} OFF</div>
                 <div className="card-image">
                   <Image 
-                    src={deal.image}
-                    alt={deal.name}
+                    src={product.image}
+                    alt={product.name}
                     width={200}
                     height={200}
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
                 <div className="card-content">
-                  <h3 className="product-name">{deal.name}</h3>
+                  <h3 className="product-name">{product.name}</h3>
                   <div className="price-container">
-                    <span className="original-price">${deal.originalPrice}</span>
-                    <span className="sale-price">${deal.salePrice}</span>
+                    <span className="original-price">${product.originalPrice}</span>
+                    <span className="sale-price">${product.salePrice}</span>
                   </div>
                   <button className="btn btn-primary btn-sm">Add to Cart</button>
                 </div>
@@ -223,12 +231,12 @@ export default async function Home() {
             <Link href="/new-arrivals" className="view-all-link">View All</Link>
           </div>
           <div className="new-arrivals-grid">
-            {newArrivals.map((product) => (
+            {newArrival.map((product) => (
               <Link key={product.id} href={`/product/${product.id}`} className="product-card new-arrival-card">
                 {product.isNew && <div className="new-badge">NEW</div>}
                 <div className="card-image">
                   <Image 
-                    src={product.image}
+                    src={product.image || '/images/placeholder.png'}
                     alt={product.name}
                     width={200}
                     height={200}
@@ -237,7 +245,7 @@ export default async function Home() {
                 </div>
                 <div className="card-content">
                   <h3 className="product-name">{product.name}</h3>
-                  <div className="price">${product.price}</div>
+                  <div className="price">${product.originalPrice}</div>
                   <button className="btn btn-primary btn-sm">Add to Cart</button>
                 </div>
               </Link>
