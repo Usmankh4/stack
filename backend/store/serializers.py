@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Phones, PhoneVariant, Accessory
+from .models import Phones, PhoneVariant, Accessory, FlashDeal
 from urllib.parse import urljoin
 from django.conf import settings
 
@@ -53,7 +53,7 @@ class AccessorySerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'description', 'price', 
             'sale_price', 'stock', 'image', 'is_active',
             'is_new_arrival', 'is_best_seller', 'is_flash_deal', 
-            'flash_deal_end'
+            'flash_deal_end', 'image_url', 'discount_percentage'
         ]
 
     def get_image_url(self, obj):
@@ -70,3 +70,24 @@ class AccessorySerializer(serializers.ModelSerializer):
 class HomepageSectionSerializer(serializers.Serializer):
     phones = PhoneVariantSerializer(many=True, read_only=True)
     accessories = AccessorySerializer(many=True, read_only=True)
+
+
+class FlashDealSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = FlashDeal
+        fields = [
+            'id', 'name', 'slug', 'description', 'product_type', 
+            'original_price', 'discount_percentage', 'sale_price',
+            'start_date', 'end_date', 'is_active', 'stock',
+            'image_url', 'reference_phone', 'reference_accessory'
+        ]
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None

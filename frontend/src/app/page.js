@@ -49,7 +49,7 @@ export default async function Home() {
       buttonText: 'View Deal' 
     }
   ];
-  const flashDeals = [
+  const flashDeal = [
     { id: 1, name: 'iPhone 15 Pro', originalPrice: 999, salePrice: 899, image: phoneImages.apple, discount: '10%', timeLeft: '5h 23m' },
     { id: 2, name: 'Samsung S24 Ultra', originalPrice: 1199, salePrice: 999, image: phoneImages.samsung, discount: '17%', timeLeft: '5h 23m' },
     { id: 3, name: 'Google Pixel 8', originalPrice: 799, salePrice: 699, image: phoneImages.google, discount: '12%', timeLeft: '5h 23m' },
@@ -61,7 +61,7 @@ export default async function Home() {
     { id: 3, name: 'Google Pixel Tablet', price: 499, image: phoneImages.tablets, isNew: true },
   ];
 
-  const bestSellers = [
+  const bestSeller = [
     { id: 1, name: 'iPhone 14 Pro', price: 899, image: phoneImages.apple, rating: 4.8, reviewCount: 245 },
     { id: 2, name: 'Samsung S23', price: 799, image: phoneImages.samsung, rating: 4.7, reviewCount: 189 },
     { id: 3, name: 'Phone Charging Stand', price: 29.99, image: phoneImages.accessories, rating: 4.9, reviewCount: 412 },
@@ -93,9 +93,22 @@ export default async function Home() {
 
   const productData = await fetchHomePageData();
 
-  const flashDeal = productData.flash_deals.map(product => {
-    return {
-      id: product.id,
+  const flashDeals = Array.isArray(productData.flash_deals) ? 
+    productData.flash_deals.map(product => ({
+      id: `flash-${product.id}`,
+      name: product.name,
+      originalPrice: parseFloat(product.original_price),
+      salePrice: parseFloat(product.sale_price),
+      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      discount: `${product.discount_percentage}%`,
+      timeLeft: getTimeLeft(product.end_date),
+      slug: product.slug,
+      type: product.product_type // 'phone' or 'accessory'
+    })).slice(0, 3) : [];
+
+  const newArrivalPhones = Array.isArray(productData.new_arrivals.phones) ?
+    productData.new_arrivals.phones.map(product => ({
+      id: `${product.id}`,
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
@@ -103,13 +116,12 @@ export default async function Home() {
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
-      type: product.storage ? 'phone' : 'accessory'
-    };
-  }).slice(0, 3);
-      
-  const newArrival = productData.new_arrivals.map(product =>{
-    return {
-      id: product.id,
+      type: 'phone'
+    })) : [];
+
+  const newArrivalAccessories = Array.isArray(productData.new_arrivals.accessories) ?
+    productData.new_arrivals.accessories.map(product => ({
+      id: `${product.id}`,
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
@@ -117,9 +129,38 @@ export default async function Home() {
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
-      type: product.storage ? 'phone' : 'accessory',  
-    }
-  }).slice(0,3);
+      type: 'accessory'
+    })) : [];
+
+  const newArrival = [...newArrivalPhones, ...newArrivalAccessories].slice(0, 3);
+
+  const bestSellerPhones = Array.isArray(productData.best_sellers.phones) ?
+    productData.best_sellers.phones.map(product => ({
+      id: `${product.id}`,
+      name: product.name,
+      originalPrice: parseFloat(product.price),
+      salePrice: parseFloat(product.sale_price),
+      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
+      timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
+      slug: product.slug,
+      type: 'phone'
+    })) : [];
+
+  const bestSellerAccessories = Array.isArray(productData.best_sellers.accessories) ?
+    productData.best_sellers.accessories.map(product => ({
+      id: `${product.id}`,
+      name: product.name,
+      originalPrice: parseFloat(product.price),
+      salePrice: parseFloat(product.sale_price),
+      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
+      timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
+      slug: product.slug,
+      type: 'accessory'
+    })) : [];
+
+  const bestSellers = [...bestSellerPhones, ...bestSellerAccessories].slice(0, 3);
 
   async function fetchHomePageData() {
     try {
@@ -131,14 +172,12 @@ export default async function Home() {
     } catch (error) {
       console.error('Error fetching homepage data:', error);
       return {
-        flash_deals: { phones: [], accessories: [] },
+        flash_deals: [],
         new_arrivals: { phones: [], accessories: [] },
         best_sellers: { phones: [], accessories: [] }
       };
     }
   }
-
-  
 
   return (
     <div className="page-container">
@@ -200,8 +239,8 @@ export default async function Home() {
             </div>
           </div>
           <div className="deals-slider">
-            {flashDeal.map((product) => (
-              <Link key={product.id} href={`/product/${product.id}`} className="deal-card">
+            {flashDeals.map((product) => (
+              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="deal-card">
                 <div className="discount-badge">{product.discount} OFF</div>
                 <div className="card-image">
                   <Image 
@@ -232,7 +271,7 @@ export default async function Home() {
           </div>
           <div className="new-arrivals-grid">
             {newArrival.map((product) => (
-              <Link key={product.id} href={`/product/${product.id}`} className="product-card new-arrival-card">
+              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="product-card new-arrival-card">
                 {product.isNew && <div className="new-badge">NEW</div>}
                 <div className="card-image">
                   <Image 
@@ -304,7 +343,7 @@ export default async function Home() {
           </div>
           <div className="best-sellers-grid">
             {bestSellers.map((product) => (
-              <Link key={product.id} href={`/product/${product.id}`} className="product-card best-seller-card">
+              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="product-card best-seller-card">
                 <div className="bestseller-badge">Best Seller</div>
                 <div className="card-image">
                   <Image 
@@ -317,7 +356,7 @@ export default async function Home() {
                 </div>
                 <div className="card-content">
                   <h3 className="product-name">{product.name}</h3>
-                  <div className="price">${product.price}</div>
+                  <div className="price">${product.salePrice}</div>
                   <div className="rating">
                     <span className="stars">{'★'.repeat(Math.floor(product.rating))}{'☆'.repeat(5 - Math.floor(product.rating))}</span>
                     <span className="review-count">({product.reviewCount})</span>

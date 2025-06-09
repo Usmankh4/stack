@@ -7,11 +7,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Phones, PhoneVariant, Accessory
+from .models import Phones, PhoneVariant, Accessory, FlashDeal
 from .serializers import (
     PhoneSerializer, 
     PhoneVariantSerializer, 
-    AccessorySerializer
+    AccessorySerializer,
+    FlashDealSerializer
 )
 
 class ProductPagination(PageNumberPagination):
@@ -30,17 +31,13 @@ class HomepageAPIView(APIView):
             
         now = timezone.now()
         
-        phone_flash_deals = PhoneVariant.objects.filter(
-            is_flash_deal=True, 
-            is_active=True,
-            flash_deal_end__gt=now
-        ).select_related('phone')[:8]
         
-        accessory_flash_deals = Accessory.objects.filter(
-            is_flash_deal=True, 
+        flash_deals = FlashDeal.objects.filter(
             is_active=True,
-            flash_deal_end__gt=now
-        )[:8]
+            start_date__lte=now,
+            end_date__gt=now
+        )
+        
         
         phone_new_arrivals = PhoneVariant.objects.filter(
             is_new_arrival=True, 
@@ -61,36 +58,37 @@ class HomepageAPIView(APIView):
             is_best_seller=True, 
             is_active=True
         )[:8]
+        
         response_data = {
-            'flash_deals': PhoneVariantSerializer(
-                phone_flash_deals, 
-                many=True,
-                context={'request': request}
-            ).data + AccessorySerializer(
-                accessory_flash_deals,
+            'flash_deals': FlashDealSerializer(
+                flash_deals, 
                 many=True,
                 context={'request': request}
             ).data,
-            
-            'new_arrivals': PhoneVariantSerializer(
-                phone_new_arrivals,
-                many=True,
-                context={'request': request}
-            ).data + AccessorySerializer(
-                accessory_new_arrivals,
-                many=True,
-                context={'request': request}
-            ).data,
-            
-            'best_sellers': PhoneVariantSerializer(
-                phone_best_sellers,
-                many=True,
-                context={'request': request}
-            ).data + AccessorySerializer(
-                accessory_best_sellers,
-                many=True,
-                context={'request': request}
-            ).data
+            'new_arrivals': {
+                'phones': PhoneVariantSerializer(
+                    phone_new_arrivals,
+                    many=True,
+                    context={'request': request}
+                ).data,
+                'accessories': AccessorySerializer(
+                    accessory_new_arrivals,
+                    many=True,
+                    context={'request': request}
+                ).data
+            },
+            'best_sellers': {
+                'phones': PhoneVariantSerializer(
+                    phone_best_sellers,
+                    many=True,
+                    context={'request': request}
+                ).data,
+                'accessories': AccessorySerializer(
+                    accessory_best_sellers,
+                    many=True,
+                    context={'request': request}
+                ).data
+            }
         }
         
         cache.set(cache_key, response_data, 60 * 15)
@@ -103,34 +101,61 @@ class FlashDealsAPIView(APIView):
     def get(self, request, format=None):
         now = timezone.now()
         
-        phone_flash_deals = PhoneVariant.objects.filter(
-            is_flash_deal=True, 
+       
+        active_flash_deals = FlashDeal.objects.filter(
             is_active=True,
-            flash_deal_end__gt=now
-        ).select_related('phone')
+            start_date__lte=now,
+            end_date__gt=now
+        )
+        
+       
+        phone_flash_deals = PhoneVariant.objects.filter(
+            flash_deals__in=active_flash_deals
+        ).select_related('phone').distinct()
         
         accessory_flash_deals = Accessory.objects.filter(
+            flash_deals__in=active_flash_deals
+        ).distinct()
+        
+        
+        phone_flash_deals_legacy = PhoneVariant.objects.filter(
             is_flash_deal=True, 
             is_active=True,
             flash_deal_end__gt=now
-        )
+        ).select_related('phone').exclude(id__in=phone_flash_deals.values_list('id', flat=True))
+        
+        accessory_flash_deals_legacy = Accessory.objects.filter(
+            is_flash_deal=True, 
+            is_active=True,
+            flash_deal_end__gt=now
+        ).exclude(id__in=accessory_flash_deals.values_list('id', flat=True))
+        
+        
+        all_phone_flash_deals = list(phone_flash_deals) + list(phone_flash_deals_legacy)
+        all_accessory_flash_deals = list(accessory_flash_deals) + list(accessory_flash_deals_legacy)
        
+    
         end_time = None
-        if phone_flash_deals.exists():
-            end_time = phone_flash_deals.first().flash_deal_end
-        elif accessory_flash_deals.exists():
-            end_time = accessory_flash_deals.first().flash_deal_end
+        if active_flash_deals.exists():
+            end_time = active_flash_deals.order_by('end_date').first().end_date
+        elif phone_flash_deals_legacy.exists():
+            end_time = phone_flash_deals_legacy.order_by('flash_deal_end').first().flash_deal_end
+        elif accessory_flash_deals_legacy.exists():
+            end_time = accessory_flash_deals_legacy.order_by('flash_deal_end').first().flash_deal_end
         
         response_data = {
-            'products': PhoneVariantSerializer(
-                phone_flash_deals,
-                many=True,
-                context={'request': request}
-            ).data + AccessorySerializer(
-                accessory_flash_deals,
-                many=True,
-                context={'request': request}
-            ).data,
+            'products': {
+                'phones': PhoneVariantSerializer(
+                    all_phone_flash_deals,
+                    many=True,
+                    context={'request': request}
+                ).data,
+                'accessories': AccessorySerializer(
+                    all_accessory_flash_deals,
+                    many=True,
+                    context={'request': request}
+                ).data
+            },
             'end_time': end_time
         }
         
@@ -195,8 +220,7 @@ class BestSellersAPIView(APIView):
         return Response(response_data)
 
 class PhoneVariantDetailAPIView(APIView):
-    permission_classes = [AllowAny]
-    
+    permission_classes = [AllowAny] 
     def get(self, request, slug, format=None):
         try:
             phone = Phones.objects.get(slug=slug)
@@ -206,13 +230,11 @@ class PhoneVariantDetailAPIView(APIView):
                 return Response(
                     {"error": "No active variants found for this phone"},
                     status=status.HTTP_404_NOT_FOUND
-                )
-            
+                )    
             related_phones = PhoneVariant.objects.filter(
                 Q(phone__brand=phone.brand) & ~Q(phone=phone),
                 is_active=True
-            ).select_related('phone')[:4]
-            
+            ).select_related('phone')[:4]            
             response_data = {
                 'phone': PhoneSerializer(phone, context={'request': request}).data,
                 'variants': PhoneVariantSerializer(

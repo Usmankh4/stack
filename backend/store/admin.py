@@ -22,3 +22,16 @@ class AccessoryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ('price', 'sale_price', 'stock', 'is_active', 'is_flash_deal', 'is_new_arrival', 'is_best_seller')
+from django.contrib import admin
+from .models import FlashDeal
+
+@admin.register(FlashDeal)
+class FlashDealAdmin(admin.ModelAdmin):
+    list_display = ('name', 'product_name', 'discount_percentage', 'start_date', 'end_date', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'description')
+    
+    def product_name(self, obj):
+        if obj.phone_variant:
+            return f"{obj.phone_variant.phone.name} - {obj.phone_variant.color}"
+        return obj.accessory.name if obj.accessory else ""
