@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from './components/header';
+import ProductCarousel from './components/ProductCarousel';
 const bannerImage = "/images/phone.png";
 const phoneImages = {
   apple: "/images/15promax.jpg",
@@ -104,7 +105,7 @@ export default async function Home() {
       discount: `${product.discount_percentage}%`,
       timeLeft: getTimeLeft(product.end_date),
       slug: product.slug,
-      type: product.product_type // 'phone' or 'accessory'
+      type: product.product_type 
     })).slice(0, 5) : [];
 
   const newArrivalPhones = Array.isArray(productData.new_arrivals.phones) ?
@@ -133,7 +134,7 @@ export default async function Home() {
       type: 'accessory'
     })) : [];
 
-  const newArrival = [...newArrivalPhones, ...newArrivalAccessories].slice(0, 3);
+  const newArrival = [...newArrivalPhones, ...newArrivalAccessories].slice(0, 4);
 
   const bestSellerPhones = Array.isArray(productData.best_sellers.phones) ?
     productData.best_sellers.phones.map(product => ({
@@ -161,7 +162,7 @@ export default async function Home() {
       type: 'accessory'
     })) : [];
 
-  const bestSellers = [...bestSellerPhones, ...bestSellerAccessories].slice(0, 3);
+  const bestSellers = [...bestSellerPhones, ...bestSellerAccessories].slice(0, 4);
 
   async function fetchHomePageData() {
     try {
@@ -189,10 +190,7 @@ export default async function Home() {
       if(!response.ok){
         throw new Error('Failed to fetch flash deals');
       }
-      
-      const data = await response.json();
-      console.log('Flash deals data:', data); // Debug log
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Error fetching flash deals:', error);
       return [];
@@ -251,68 +249,23 @@ export default async function Home() {
           </div>
         </section>
         
-        <section className="flash-deals-section">
-          <div className="section-header">
-            <h2 className="section-title">Flash Deals</h2>
-            <Link href="/flash-deals" className="view-all-link">View All</Link>
-          </div>
-          <div className="deals-slider">
-            {flashDeals.length > 0 ? flashDeals.map((product) => (
-              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="deal-card">
-                <div className="discount-badge">{product.discount} OFF</div>
-                <div className="card-image">
-                  <Image 
-                    src={product.image}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-                <div className="card-content">
-                  <h3 className="product-name">{product.name}</h3>
-                  <div className="price-container">
-                    <span className="original-price">${product.originalPrice}</span>
-                    <span className="sale-price">${product.salePrice}</span>
-                  </div>
-                  <button className="btn btn-primary btn-sm">Add to Cart</button>
-                </div>
-              </Link>
-            )) : (
-              <div className="no-deals-message">
-                <p>No active flash deals at the moment. Check back soon!</p>
-              </div>
-            )}
-          </div>
-        </section>
+        <ProductCarousel 
+          products={flashDeals} 
+          title="Flash Deals" 
+          viewAllLink="/flash-deals" 
+          type="flash-deal"
+          slidesToShow={4}
+          autoplaySpeed={4000}
+        />
         
-        <section className="new-arrivals-section">
-          <div className="section-header">
-            <h2 className="section-title">Just Arrived</h2>
-            <Link href="/new-arrivals" className="view-all-link">View All</Link>
-          </div>
-          <div className="new-arrivals-grid">
-            {newArrival.map((product) => (
-              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="product-card new-arrival-card">
-                {product.isNew && <div className="new-badge">NEW</div>}
-                <div className="card-image">
-                  <Image 
-                    src={product.image || '/images/placeholder.png'}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-                <div className="card-content">
-                  <h3 className="product-name">{product.name}</h3>
-                  <div className="price">${product.originalPrice}</div>
-                  <button className="btn btn-primary btn-sm">Add to Cart</button>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <ProductCarousel 
+          products={newArrival} 
+          title="Just Arrived" 
+          viewAllLink="/new-arrivals" 
+          type="new-arrival"
+          slidesToShow={4}
+          autoplaySpeed={5000}
+        />
         
         <section className="products-section">
           <div className="cards-grid">
@@ -358,37 +311,14 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="best-sellers-section">
-          <div className="section-header">
-            <h2 className="section-title">Customer Favorites</h2>
-            <Link href="/best-sellers" className="view-all-link">View All</Link>
-          </div>
-          <div className="best-sellers-grid">
-            {bestSellers.map((product) => (
-              <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="product-card best-seller-card">
-                <div className="bestseller-badge">Best Seller</div>
-                <div className="card-image">
-                  <Image 
-                    src={product.image}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-                <div className="card-content">
-                  <h3 className="product-name">{product.name}</h3>
-                  <div className="price">${product.salePrice}</div>
-                  <div className="rating">
-                    <span className="stars">{'★'.repeat(Math.floor(product.rating))}{'☆'.repeat(5 - Math.floor(product.rating))}</span>
-                    <span className="review-count">({product.reviewCount})</span>
-                  </div>
-                  <button className="btn btn-primary btn-sm">Add to Cart</button>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <ProductCarousel 
+          products={bestSellers} 
+          title="Customer Favorites" 
+          viewAllLink="/best-sellers" 
+          type="best-seller"
+          slidesToShow={4}
+          autoplaySpeed={6000}
+        />
         
         
         <section className="bundle-deals-section">

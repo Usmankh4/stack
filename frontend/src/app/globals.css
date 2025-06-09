@@ -1012,3 +1012,256 @@ a {
     padding: 10px 20px;
   }
 }
+
+/* Carousel Styles */
+.product-carousel-section {
+  margin: 40px 0;
+  position: relative;
+}
+
+.carousel-container {
+  position: relative;
+  padding: 0 10px;
+}
+
+/* Slick Carousel Customization */
+.slick-slider {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.slick-list {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.slick-track {
+  position: relative;
+  top: 0;
+  left: 0;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.slick-slide {
+  height: auto;
+  padding: 10px;
+}
+
+.slick-slide > div {
+  height: 100%;
+}
+
+/* Carousel Card Styles */
+.carousel-card {
+  height: 100%;
+  margin: 0 10px;
+  display: flex !important;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Carousel Navigation */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-arrow:hover {
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-arrow svg {
+  width: 20px;
+  height: 20px;
+  color: #333;
+}
+
+.carousel-arrow-prev {
+  left: -5px;
+}
+
+.carousel-arrow-next {
+  right: -5px;
+}
+
+/* Dots Navigation */
+.slick-dots {
+  position: relative;
+  bottom: 0;
+  display: flex !important;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 15px 0 0;
+}
+
+.slick-dots li {
+  margin: 0 5px;
+}
+
+.slick-dots li button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ddd;
+  font-size: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.slick-dots li.slick-active button {
+  background-color: #333;
+  transform: scale(1.2);
+}
+
+/* Timer container for flash deals */
+.timer-container {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #e53935;
+}
+
+/* Specific carousel type customizations */
+.flash-deal-carousel .carousel-card {
+  border: 1px solid #ffcdd2;
+}
+
+.new-arrival-carousel .carousel-card {
+  border: 1px solid #c8e6c9;
+}
+
+.best-seller-carousel .carousel-card {
+  border: 1px solid #ffe0b2;
+}
+
+@media (max-width: 1024px) {
+  .headerTop {
+    padding: 15px 3%;
+  }
+  
+  .headerTopLeft h2 {
+    font-size: 18px;
+  }
+  
+  .headerTopRight {
+    gap: 15px;
+  }
+  
+  .navItem {
+    padding: 0 15px;
+  }
+  
+  .hero-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 20px;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-buttons {
+    justify-content: center;
+  }
+  
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  
+  .category-cards-grid {
+    flex-direction: column;
+  }
+  
+  .category-card, .product-card {
+    padding-bottom: 60px;
+  }
+  
+  .carousel-arrow {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerTop {
+    height: 80px;
+  }
+  
+  .headerTopLeft h2 {
+    font-size: 16px;
+  }
+  
+  .headerTopRight {
+    gap: 10px;
+  }
+  
+  .navList {
+    justify-content: center;
+  }
+  
+  .navItem {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .deals-slider, .new-arrivals-grid, .best-sellers-grid, .bundles-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .testimonials-slider {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .newsletter-form {
+    flex-direction: column;
+  }
+  
+  .carousel-arrow {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .carousel-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+}
