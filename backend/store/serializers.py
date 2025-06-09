@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Phones, PhoneVariant, Accessory, FlashDeal
+from .models import Phones, PhoneVariant, Accessory
 from urllib.parse import urljoin
 from django.conf import settings
 
@@ -20,50 +20,32 @@ class PhoneVariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneVariant
         fields = [
-            'id', 'sku', 'color', 'storage', 'price', 'sale_price', 
+            'id', 'sku', 'color', 'storage', 'price',
             'stock', 'image', 'is_active', 'is_new_arrival', 
-            'is_best_seller', 'is_flash_deal', 'flash_deal_end',
-            'name', 'brand', 'slug', 'image_url', 'description'
+            'is_best_seller', 'name', 'brand', 'slug', 'image_url', 'description'
         ]
-        read_only_fields = ['discount_percentage']
     
     def get_image_url(self, obj):
         if obj.image:
             return urljoin(settings.MEDIA_URL, obj.image.name)
-        return None
-    
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if instance.sale_price and instance.price:
-            discount = ((instance.price - instance.sale_price) / instance.price) * 100
-            data['discount_percentage'] = round(discount)
-        else:
-            data['discount_percentage'] = None
-        return data    
+        return None    
 
 
 
 class AccessorySerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
-    discount_percentage = serializers.SerializerMethodField()
    
     class Meta:
         model = Accessory
         fields = [
             'id', 'name', 'slug', 'description', 'price', 
-            'sale_price', 'stock', 'image', 'is_active',
-            'is_new_arrival', 'is_best_seller', 'is_flash_deal', 
-            'flash_deal_end', 'image_url', 'discount_percentage'
+            'stock', 'image', 'is_active',
+            'is_new_arrival', 'is_best_seller', 'image_url'
         ]
 
     def get_image_url(self, obj):
         if obj.image:
             return urljoin(settings.MEDIA_URL, obj.image.name)
-        return None
-
-    def get_discount_percentage(self, obj):
-        if obj.sale_price and obj.price:
-            return round(((obj.price - obj.sale_price) / obj.price) * 100)
         return None
 
 
@@ -72,22 +54,4 @@ class HomepageSectionSerializer(serializers.Serializer):
     accessories = AccessorySerializer(many=True, read_only=True)
 
 
-class FlashDealSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = FlashDeal
-        fields = [
-            'id', 'name', 'slug', 'description', 'product_type', 
-            'original_price', 'discount_percentage', 'sale_price',
-            'start_date', 'end_date', 'is_active', 'stock',
-            'image_url', 'reference_phone', 'reference_accessory'
-        ]
-    
-    def get_image_url(self, obj):
-        if obj.image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
-        return None
+# FlashDealSerializer has been moved to the promotions app

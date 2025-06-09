@@ -92,19 +92,20 @@ export default async function Home() {
   ];
 
   const productData = await fetchHomePageData();
+  const flashDealsData = await fetchFlashDeals();
 
-  const flashDeals = Array.isArray(productData.flash_deals) ? 
-    productData.flash_deals.map(product => ({
-      id: `flash-${product.id}`,
+  const flashDeals = Array.isArray(flashDealsData) ? 
+    flashDealsData.map(product => ({
+      id: `${product.id}`,
       name: product.name,
       originalPrice: parseFloat(product.original_price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      image: product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `http://127.0.0.1:8000${product.image_url}`) : '/images/placeholder.png',
       discount: `${product.discount_percentage}%`,
       timeLeft: getTimeLeft(product.end_date),
       slug: product.slug,
       type: product.product_type // 'phone' or 'accessory'
-    })).slice(0, 3) : [];
+    })).slice(0, 5) : [];
 
   const newArrivalPhones = Array.isArray(productData.new_arrivals.phones) ?
     productData.new_arrivals.phones.map(product => ({
@@ -112,7 +113,7 @@ export default async function Home() {
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      image: product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `http://127.0.0.1:8000${product.image_url}`) : '/images/placeholder.png',
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
@@ -125,7 +126,7 @@ export default async function Home() {
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      image: product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `http://127.0.0.1:8000${product.image_url}`) : '/images/placeholder.png',
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
@@ -140,7 +141,7 @@ export default async function Home() {
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      image: product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `http://127.0.0.1:8000${product.image_url}`) : '/images/placeholder.png',
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
@@ -153,7 +154,7 @@ export default async function Home() {
       name: product.name,
       originalPrice: parseFloat(product.price),
       salePrice: parseFloat(product.sale_price),
-      image: product.image_url ? `http://127.0.0.1:8000${product.image_url}` : '/images/placeholder.png',
+      image: product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `http://127.0.0.1:8000${product.image_url}`) : '/images/placeholder.png',
       discount: product.discount_percentage ? `${product.discount_percentage}%` : 'Sale',
       timeLeft: product.flash_deal_end ? getTimeLeft(product.flash_deal_end) : '5h 23m',
       slug: product.slug,
@@ -178,6 +179,26 @@ export default async function Home() {
       };
     }
   }
+
+  async function fetchFlashDeals(){
+    try{
+      const response = await fetch('http://127.0.0.1:8000/api/flash-deals/',{
+        cache: 'no-store',
+        next: {revalidate: 60}
+      });
+      if(!response.ok){
+        throw new Error('Failed to fetch flash deals');
+      }
+      
+      const data = await response.json();
+      console.log('Flash deals data:', data); // Debug log
+      return data;
+    } catch (error) {
+      console.error('Error fetching flash deals:', error);
+      return [];
+    }
+  }
+
 
   return (
     <div className="page-container">
@@ -233,13 +254,10 @@ export default async function Home() {
         <section className="flash-deals-section">
           <div className="section-header">
             <h2 className="section-title">Flash Deals</h2>
-            <div className="countdown-timer">
-              <span className="timer-label">Ends in:</span>
-              <span className="timer-value">05:23:47</span>
-            </div>
+            <Link href="/flash-deals" className="view-all-link">View All</Link>
           </div>
           <div className="deals-slider">
-            {flashDeals.map((product) => (
+            {flashDeals.length > 0 ? flashDeals.map((product) => (
               <Link key={product.id} href={`/product/${product.type}/${product.slug}`} className="deal-card">
                 <div className="discount-badge">{product.discount} OFF</div>
                 <div className="card-image">
@@ -260,7 +278,11 @@ export default async function Home() {
                   <button className="btn btn-primary btn-sm">Add to Cart</button>
                 </div>
               </Link>
-            ))}
+            )) : (
+              <div className="no-deals-message">
+                <p>No active flash deals at the moment. Check back soon!</p>
+              </div>
+            )}
           </div>
         </section>
         
@@ -449,4 +471,6 @@ function getTimeLeft(endTimeString) {
  
   const hours = Math.floor(timeLeft / (1000 * 60 * 60));
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return `${hours}h ${minutes}m`;
 }

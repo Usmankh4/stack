@@ -59,7 +59,6 @@ class PhoneVariant(models.Model):
     color = models.CharField(max_length=100)
     storage = models.CharField(max_length=50)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(default=0)
     reservedStock = models.IntegerField(default=0)
     image = ImageField(upload_to='phones/', null=True, blank=True)
@@ -67,8 +66,6 @@ class PhoneVariant(models.Model):
     is_active = models.BooleanField(default=True)
     is_new_arrival = models.BooleanField(default=False)
     is_best_seller = models.BooleanField(default=False)
-    is_flash_deal = models.BooleanField(default=False)
-    flash_deal_end = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
     
@@ -114,7 +111,6 @@ class Accessory(models.Model):
     slug = models.CharField(max_length=255, unique=True, blank = True)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(default=0)
     image = ImageField(upload_to='accessories/', null=True, blank=True)
     stripe_id = models.CharField(max_length=100, null=True, blank=True)
@@ -122,8 +118,6 @@ class Accessory(models.Model):
     is_active = models.BooleanField(default=True)
     is_new_arrival = models.BooleanField(default=False)
     is_best_seller = models.BooleanField(default=False)
-    is_flash_deal = models.BooleanField(default=False)
-    flash_deal_end = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -167,60 +161,3 @@ class Accessory(models.Model):
 
     class Meta:
         verbose_name_plural = "Accessories"
-
-
-class FlashDeal(models.Model):
-    PRODUCT_TYPE_CHOICES = [
-        ('phone', 'Phone'),
-        ('accessory', 'Accessory'),
-    ]
-    
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
-    product_type = models.CharField(max_length=10, choices=PRODUCT_TYPE_CHOICES)
-    original_price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    image = ImageField(upload_to='flash_deals/', null=True, blank=True)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
-    stock = models.IntegerField(default=0)
-    slug = models.CharField(max_length=255, unique=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    reference_phone = models.ForeignKey(PhoneVariant, on_delete=models.SET_NULL, null=True, blank=True, related_name='referenced_flash_deals')
-    reference_accessory = models.ForeignKey(Accessory, on_delete=models.SET_NULL, null=True, blank=True, related_name='referenced_flash_deals')
-    
-    class Meta:
-        verbose_name_plural = "Flash Deals"
-    def clean(self):
-        if self.end_date <= self.start_date:
-            raise ValidationError("End date must be after start date.")
-        
-        if self.reference_phone and self.reference_accessory:
-            raise ValidationError("A flash deal can only reference either a phone variant or an accessory, not both.")
-        
-        if self.product_type == 'phone' and not self.reference_phone:
-            raise ValidationError("For phone product type, a reference phone must be selected.")
-        
-        if self.product_type == 'accessory' and not self.reference_accessory:
-            raise ValidationError("For accessory product type, a reference accessory must be selected.")
-    
-    def save(self, *args, **kwargs):
-        self.clean()
-        
-        if not self.sale_price:
-            discount = (self.discount_percentage / 100) * self.original_price
-            self.sale_price = self.original_price - discount
-        if not self.slug:
-            base_slug = slugify(self.name)
-            self.slug = base_slug
-            n = 1
-            while FlashDeal.objects.filter(slug=self.slug).exists():
-                self.slug = f"{base_slug}-{n}"
-                n += 1        
-        super().save(*args, **kwargs)   
-    def __str__(self):
-        return f"{self.name} ({self.discount_percentage}% off)"

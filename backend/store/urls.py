@@ -14,10 +14,9 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/api/homepage/', permanent=False), name='index'),
     path('admin/', admin.site.urls),
     
-    # API endpoints from promotions app
     path('api/', include('promotions.urls')),
     
-    # API endpoints from store app
+   
     path('api/new-arrivals/', NewArrivalsAPIView.as_view(), name='new_arrivals'),
     path('api/best-sellers/', BestSellersAPIView.as_view(), name='best_sellers'),
     path('api/phones/<slug:slug>/', PhoneVariantDetailAPIView.as_view(), name='phone_detail'),
